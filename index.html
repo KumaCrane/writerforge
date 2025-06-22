@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WriterForge</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2em; }
+        textarea { width: 100%; height: 100px; }
+        .result { margin-top: 1em; }
+    </style>
+</head>
+<body>
+    <textarea id="textInput" placeholder="Введите текст..."></textarea>
+    <div class="result" id="wordCountDisplay">Слов: 0</div>
+    <div class="result" id="result"></div>
+    <script>
+        const apiBase = 'http://localhost:5000/api/writer';
+        async function updateTextAndCount() {
+            const text = document.getElementById('textInput').value;
+            const res = await fetch(apiBase + '/countwords', {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain' },
+                body: text
+            });
+            const count = await res.json();
+            document.getElementById('wordCountDisplay').innerText = 'Слов: ' + count;
+        }
+        document.getElementById('textInput').addEventListener('input', updateTextAndCount);
+        updateTextAndCount();
+    </script>
+</body>
+</html>
