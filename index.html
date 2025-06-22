@@ -1,33 +1,117 @@
 <!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WriterForge</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 2em; }
-        textarea { width: 100%; height: 100px; }
-        .result { margin-top: 1em; }
-    </style>
-</head>
-<body>
-    <textarea id="textInput" placeholder="Введите текст..."></textarea>
-    <div class="result" id="wordCountDisplay">Слов: 0</div>
-    <div class="result" id="result"></div>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="globals.css" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="slide">
+      <div class="overlap-wrapper">
+        <div class="overlap">
+          <div class="view">
+            <div class="div">
+              <div class="overlap-group">
+                <div class="view-2">
+                  <textarea id="textInput" class="fixed-textarea" placeholder="Введите текст..."></textarea>
+                </div>
+              </div>
+              <img class="line" src="https://c.animaapp.com/mc7gc769uMvrUE/img/line-1.svg" />
+              <div class="view-3">
+                <div class="disk-wrapper"><div class="disk"></div></div>
+                <div class="undo-wrapper">
+                  <img class="undo" src="https://c.animaapp.com/mc7gc769uMvrUE/img/undo.svg" />
+                </div>
+                <div class="redo-wrapper">
+                  <img class="redo" src="https://c.animaapp.com/mc7gc769uMvrUE/img/redo.svg" />
+                </div>
+              </div>
+            </div>
+            <div class="view-4">
+              <div class="view-wrapper">
+                <div class="view-5">
+                  <div class="angle-right-wrapper">
+                    <img class="angle-right" src="https://c.animaapp.com/mc7gc769uMvrUE/img/angle-right-1.png" />
+                  </div>
+                  <div class="play-wrapper">
+                    <img class="play" src="https://c.animaapp.com/mc7gc769uMvrUE/img/play-1.png" />
+                  </div>
+                  <div class="angle-left-wrapper">
+                    <img class="angle-left" src="https://c.animaapp.com/mc7gc769uMvrUE/img/angle-left-1.png" />
+                  </div>
+                </div>
+              </div>
+              <div class="view-6">
+                <input type="text" id="playlistInput" placeholder="Вставьте ссылку на плейлист..." style="width: 220px; font-size: 14px; border-radius: 6px; border: 1px solid #ccc; padding: 2px 8px;" />
+              </div>
+            </div>
+            <div class="overlap-group-wrapper">
+              <div class="overlap-2">
+                <!-- <div class="rectangle"></div> -->
+                <div class="text-wrapper">Количество слов: <span id="wordCountDisplay">0</span></div>
+              </div>
+            </div>
+            <div class="view-7">
+              <div class="pause-wrapper" id="pauseBtn" style="cursor:pointer;">
+                <img class="pause" src="https://c.animaapp.com/mc7gc769uMvrUE/img/pause-2.svg" />
+              </div>
+              <div class="div-wrapper"><div class="text-wrapper-2" id="timerDisplay">30:00</div></div>
+            </div>
+            <img
+              class="element-simple"
+              src="https://c.animaapp.com/mc7gc769uMvrUE/img/20250621-2349---------------------------simple-compose-01jy9x4ht.png"
+            />
+          </div>
+          <div class="menu-burger-wrapper">
+            <div class="menu-burger">
+              <img class="group" src="https://c.animaapp.com/mc7gc769uMvrUE/img/group-1.png" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
     <script>
-        const apiBase = 'http://localhost:5000/api/writer';
-        async function updateTextAndCount() {
-            const text = document.getElementById('textInput').value;
-            const res = await fetch(apiBase + '/countwords', {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain' },
-                body: text
-            });
-            const count = await res.json();
-            document.getElementById('wordCountDisplay').innerText = 'Слов: ' + count;
+      const apiBase = 'http://localhost:5000/api/writer';
+      async function updateTextAndCount() {
+        const text = document.getElementById('textInput').value;
+        const res = await fetch(apiBase + '/countwords', {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain' },
+          body: text
+        });
+        let count = await res.json();
+        if (typeof count !== 'number') {
+          count = Number(count) || 0;
         }
-        document.getElementById('textInput').addEventListener('input', updateTextAndCount);
-        updateTextAndCount();
+        document.getElementById('wordCountDisplay').innerText = count;
+      }
+      setInterval(updateTextAndCount, 1000);
+
+      // Таймер
+      let timerRunning = false;
+      let timerInterval = null;
+      async function getTimer() {
+        const res = await fetch(apiBase + '/gettimer');
+        if (res.ok) {
+          const time = await res.text();
+          document.getElementById('timerDisplay').innerText = time;
+        }
+      }
+      async function toggleTimer() {
+        if (!timerRunning) {
+          await fetch(apiBase + '/starttimer?minutes=30', { method: 'POST' });
+          timerRunning = true;
+          timerInterval = setInterval(getTimer, 1000);
+        } else {
+          await fetch(apiBase + '/stoptimer', { method: 'POST' });
+          timerRunning = false;
+          clearInterval(timerInterval);
+        }
+      }
+      document.getElementById('pauseBtn').addEventListener('click', toggleTimer);
+      // Первичная инициализация времени
+      getTimer();
     </script>
-</body>
+  </body>
 </html>

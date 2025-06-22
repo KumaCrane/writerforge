@@ -28,10 +28,14 @@ namespace WriterForge.Controllers
             _spellChecker = spellChecker;
         }
 
-        [HttpPost("countwords")]
-        public ActionResult<int> CountWords([FromBody] string text)
+       [HttpPost("countwords")]
+        public ActionResult<int> CountWords()
         {
-            return _wordCounter.CountWords(text);
+            using (var reader = new System.IO.StreamReader(Request.Body))
+            {
+                var text = reader.ReadToEndAsync().Result;
+                return Ok(_wordCounter.CountWords(text));
+            }
         }
 
         [HttpPost("starttimer")]
