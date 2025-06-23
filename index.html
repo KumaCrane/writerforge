@@ -17,14 +17,16 @@
                   <textarea id="textInput" class="fixed-textarea" placeholder="Введите текст..."></textarea>
                 </div>
               </div>
-              <img class="line" src="https://c.animaapp.com/mc7gc769uMvrUE/img/line-1.svg" />
+              <img class="line" src="icons/line-1.svg" />
               <div class="view-3">
-                <div class="disk-wrapper"><div class="disk"></div></div>
+                <div class="disk-wrapper">
+                  <img class="disk" src="icons/disk.svg" />
+                </div>
                 <div class="undo-wrapper">
-                  <img class="undo" src="https://c.animaapp.com/mc7gc769uMvrUE/img/undo.svg" />
+                  <img class="undo" src="icons/undo.svg" />
                 </div>
                 <div class="redo-wrapper">
-                  <img class="redo" src="https://c.animaapp.com/mc7gc769uMvrUE/img/redo.svg" />
+                  <img class="redo" src="icons/redo.svg" />
                 </div>
               </div>
             </div>
@@ -32,18 +34,18 @@
               <div class="view-wrapper">
                 <div class="view-5">
                   <div class="angle-right-wrapper">
-                    <img class="angle-right" src="https://c.animaapp.com/mc7gc769uMvrUE/img/angle-right-1.png" />
+                    <img class="angle-right" src="icons/angle-right.svg" />
                   </div>
                   <div class="play-wrapper">
-                    <img class="play" src="https://c.animaapp.com/mc7gc769uMvrUE/img/play-1.png" />
+                    <img class="play" src="icons/play.svg" />
                   </div>
                   <div class="angle-left-wrapper">
-                    <img class="angle-left" src="https://c.animaapp.com/mc7gc769uMvrUE/img/angle-left-1.png" />
+                    <img class="angle-left" src="icons/angle-left.svg" />
                   </div>
                 </div>
               </div>
               <div class="view-6">
-                <input type="text" id="playlistInput" placeholder="Вставьте ссылку на плейлист..." style="width: 220px; font-size: 14px; border-radius: 6px; border: 1px solid #ccc; padding: 2px 8px;" />
+                <input type="text" id="playlistInput" placeholder="..." style="width: 280px; font-size: 40px; border-radius: 6px; border: 1px solid #ccc; padding: 2px 8px;" />
               </div>
             </div>
             <div class="overlap-group-wrapper">
@@ -54,18 +56,18 @@
             </div>
             <div class="view-7">
               <div class="pause-wrapper" id="pauseBtn" style="cursor:pointer;">
-                <img class="pause" src="https://c.animaapp.com/mc7gc769uMvrUE/img/pause-2.svg" />
+                <img class="pause" src="icons/pause.svg" />
               </div>
               <div class="div-wrapper"><div class="text-wrapper-2" id="timerDisplay">30:00</div></div>
             </div>
             <img
               class="element-simple"
-              src="https://c.animaapp.com/mc7gc769uMvrUE/img/20250621-2349---------------------------simple-compose-01jy9x4ht.png"
+              src="icons/stepler.png"
             />
           </div>
           <div class="menu-burger-wrapper">
             <div class="menu-burger">
-              <img class="group" src="https://c.animaapp.com/mc7gc769uMvrUE/img/group-1.png" />
+              <img class="group" src="icons/menu-burger.svg" />
             </div>
           </div>
         </div>
@@ -88,7 +90,6 @@
       }
       setInterval(updateTextAndCount, 1000);
 
-      // Таймер
       let timerRunning = false;
       let timerInterval = null;
       async function getTimer() {
