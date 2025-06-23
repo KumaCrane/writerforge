@@ -19,7 +19,7 @@
               </div>
               <img class="line" src="icons/line-1.svg" />
               <div class="view-3">
-                <div class="disk-wrapper">
+                <div class="disk-wrapper" role="button" tabindex="0" id="savePdfBtn">
                   <img class="disk" src="icons/disk.svg" />
                 </div>
                 <div class="undo-wrapper">
@@ -58,7 +58,14 @@
               <div class="pause-wrapper" id="pauseBtn" style="cursor:pointer;">
                 <img class="pause" src="icons/pause.svg" />
               </div>
-              <div class="div-wrapper"><div class="text-wrapper-2" id="timerDisplay">30:00</div></div>
+              <div class="div-wrapper">
+                <div class="text-wrapper-2" id="timerDisplay">30:00</div>
+              </div>
+            </div>
+            <div id="mascot-bubble-container" style="position: absolute; left: 1750px; top: 713px; width: 177px; display: flex; flex-direction: column; align-items: center; z-index: 200; pointer-events: none;">
+              <div id="mascot-bubble" class="mascot-bubble" style="display: block;">
+                <!-- Фраза появится здесь -->
+              </div>
             </div>
             <img
               class="element-simple"
@@ -73,46 +80,192 @@
         </div>
       </div>
     </div>
+    <audio id="musicPlayer" style="display:none;"></audio>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script>
       const apiBase = 'http://localhost:5000/api/writer';
-      async function updateTextAndCount() {
+      function updateTextAndCount() {
         const text = document.getElementById('textInput').value;
-        const res = await fetch(apiBase + '/countwords', {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain' },
-          body: text
-        });
-        let count = await res.json();
-        if (typeof count !== 'number') {
-          count = Number(count) || 0;
-        }
+        const count = text.trim() ? text.trim().split(/\s+/).length : 0;
         document.getElementById('wordCountDisplay').innerText = count;
       }
       setInterval(updateTextAndCount, 1000);
 
       let timerRunning = false;
       let timerInterval = null;
-      async function getTimer() {
-        const res = await fetch(apiBase + '/gettimer');
-        if (res.ok) {
-          const time = await res.text();
-          document.getElementById('timerDisplay').innerText = time;
+      let timerSeconds = 30 * 60; 
+
+      function formatTimer(secs) {
+        const m = Math.floor(secs / 60).toString().padStart(2, '0');
+        const s = (secs % 60).toString().padStart(2, '0');
+        return `${m}:${s}`;
+      }
+
+      function updateTimerDisplay() {
+        document.getElementById('timerDisplay').innerText = formatTimer(timerSeconds);
+      }
+
+      function timerTick() {
+        if (timerRunning && timerSeconds > 0) {
+          timerSeconds--;
+          updateTimerDisplay();
+          if (timerSeconds === 0) {
+            timerRunning = false;
+            clearInterval(timerInterval);
+          }
         }
       }
-      async function toggleTimer() {
+
+      function toggleTimer() {
         if (!timerRunning) {
-          await fetch(apiBase + '/starttimer?minutes=30', { method: 'POST' });
           timerRunning = true;
-          timerInterval = setInterval(getTimer, 1000);
+          timerInterval = setInterval(timerTick, 1000);
         } else {
-          await fetch(apiBase + '/stoptimer', { method: 'POST' });
           timerRunning = false;
           clearInterval(timerInterval);
         }
       }
+
       document.getElementById('pauseBtn').addEventListener('click', toggleTimer);
-      // Первичная инициализация времени
-      getTimer();
+
+      updateTimerDisplay();
+
+      document.getElementById('savePdfBtn').addEventListener('click', function() {
+        const text = document.getElementById('textInput').value;
+        const doc = new window.jspdf.jsPDF({ 
+          orientation: 'p', 
+          unit: 'mm', 
+          format: 'a4',
+         
+        });
+      
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(14);
+        const lines = doc.splitTextToSize(text, 180);
+        doc.text(lines, 10, 20, { baseline: 'top' });
+        doc.save('text.pdf');
+      });
+
+      let phrases = [
+        "Ты молодец, продолжай писать!",
+        "Каждая строка — шаг к успеху.",
+        "Не сдавайся, вдохновение рядом!",
+        "Твои идеи важны, делись ими!",
+        "Сделай сегодня чуть больше, чем вчера.",
+        "Вдохновляйся и вдохновляй других!",
+        "Пиши с удовольствием!"
+      ];
+      let phraseIdx = 0;
+
+      function showNextPhrase() {
+        if (!phrases.length) return;
+        phraseIdx = (phraseIdx + 1) % phrases.length;
+        document.getElementById('mascot-bubble').innerText = phrases[phraseIdx];
+      }
+      function initMascotBubble() {
+        if (phrases.length) {
+          phraseIdx = Math.floor(Math.random() * phrases.length);
+          document.getElementById('mascot-bubble').innerText = phrases[phraseIdx];
+          setInterval(showNextPhrase, 10000); // раз в 10 секунд
+        }
+      }
+      initMascotBubble();
+
+      // --- MUSIC PLAYER LOGIC ---
+      let playlist = [];
+      let currentTrack = 0;
+      let isPlaying = false;
+      const audio = document.getElementById('musicPlayer');
+      const playlistInput = document.getElementById('playlistInput');
+
+      function parsePlaylist(input) {
+        // Для VK/Яндекс: если вставлена ссылка на плейлист, просто сохраняем её как один элемент
+        input = input.trim();
+        if (/vk\.com|music\.yandex\.ru/.test(input)) {
+          return [input];
+        }
+        // Иначе — разделяем по переводу строки или запятой
+        return input.split(/[\n,]+/).map(x => x.trim()).filter(Boolean);
+      }
+
+      function loadTrack(idx) {
+        if (!playlist.length) return;
+        currentTrack = ((idx % playlist.length) + playlist.length) % playlist.length;
+        audio.src = playlist[currentTrack];
+        audio.load();
+        if (isPlaying) audio.play();
+      }
+
+      function playPauseMusic() {
+        if (!playlist.length) return;
+        // Проверяем, поддерживается ли ссылка браузером
+        if (/vk\.com|music\.yandex\.ru/.test(playlist[currentTrack])) {
+          window.open(playlist[currentTrack], '_blank');
+          return;
+        }
+        if (audio.paused) {
+          audio.play();
+          isPlaying = true;
+        } else {
+          audio.pause();
+          isPlaying = false;
+        }
+      }
+
+      function nextTrack() {
+        if (!playlist.length) return;
+        if (/vk\.com|music\.yandex\.ru/.test(playlist[currentTrack])) {
+          // Для внешних плейлистов просто открываем ссылку снова
+          window.open(playlist[currentTrack], '_blank');
+          return;
+        }
+        loadTrack(currentTrack + 1);
+        if (isPlaying) audio.play();
+      }
+
+      function prevTrack() {
+        if (!playlist.length) return;
+        if (/vk\.com|music\.yandex\.ru/.test(playlist[currentTrack])) {
+          window.open(playlist[currentTrack], '_blank');
+          return;
+        }
+        loadTrack(currentTrack - 1);
+        if (isPlaying) audio.play();
+      }
+
+      // Обработка ввода плейлиста
+      function handlePlaylistInput() {
+        playlist = parsePlaylist(playlistInput.value);
+        currentTrack = 0;
+        if (playlist.length) {
+          // Если это VK/Яндекс — не трогаем <audio>
+          if (/vk\.com|music\.yandex\.ru/.test(playlist[0])) {
+            isPlaying = false;
+            audio.pause();
+            audio.src = "";
+          } else {
+            loadTrack(0);
+            isPlaying = false;
+            audio.pause();
+          }
+        }
+      }
+      playlistInput.addEventListener('change', handlePlaylistInput);
+      playlistInput.addEventListener('blur', handlePlaylistInput);
+      playlistInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+          handlePlaylistInput();
+          playlistInput.blur();
+        }
+      });
+
+      // Кнопки управления
+      document.querySelector('.play-wrapper').addEventListener('click', playPauseMusic);
+      document.querySelector('.angle-left-wrapper').addEventListener('click', prevTrack);
+      document.querySelector('.angle-right-wrapper').addEventListener('click', nextTrack);
+
+      // Автоматически следующий трек
+      audio.addEventListener('ended', nextTrack);
     </script>
   </body>
 </html>

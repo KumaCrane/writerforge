@@ -22,7 +22,6 @@ namespace WriterForge
             services.AddScoped<ITimerService, Services.TimerService>();
             services.AddScoped<IMusicIntegrationService, Services.MusicIntegrationService>();
             services.AddScoped<ISpellCheckerService, Services.SpellCheckerService>();
-            services.AddScoped<IProductivityStatsService, Services.ProductivityStatsService>();
             services.AddScoped<ICloudStorageService, Services.CloudStorageService>();
             services.AddControllers();
             services.AddCors();
